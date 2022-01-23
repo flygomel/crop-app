@@ -1,6 +1,7 @@
 {
   "name": "crop-app",
   "version": "0.1.0",
+  "homepage": "https://flygomel.github.com/crop-app",
   "private": true,
   "dependencies": {
     "fabric": "^4.6.0",
@@ -9,6 +10,8 @@
     "react-scripts": "5.0.0"
   },
   "scripts": {
+    "predeploy": "yarn run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build"
   },
@@ -29,5 +32,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^3.2.3"
   }
 }
