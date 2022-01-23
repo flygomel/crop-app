@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/flygomel/crop-app/static/css/main.9d4a1b43.css",
+    "main.js": "/flygomel/crop-app/static/js/main.cd58166d.js",
+    "index.html": "/flygomel/crop-app/index.html",
+    "main.9d4a1b43.css.map": "/flygomel/crop-app/static/css/main.9d4a1b43.css.map",
+    "main.cd58166d.js.map": "/flygomel/crop-app/static/js/main.cd58166d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9d4a1b43.css",
+    "static/js/main.cd58166d.js"
+  ]
+}
