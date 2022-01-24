@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/crop-app/static/css/main.9d4a1b43.css",
-    "main.js": "/crop-app/static/js/main.cd58166d.js",
+    "main.css": "/crop-app/static/css/main.deb0bdd4.css",
+    "main.js": "/crop-app/static/js/main.3deb0507.js",
     "index.html": "/crop-app/index.html",
-    "main.9d4a1b43.css.map": "/crop-app/static/css/main.9d4a1b43.css.map",
-    "main.cd58166d.js.map": "/crop-app/static/js/main.cd58166d.js.map"
+    "main.deb0bdd4.css.map": "/crop-app/static/css/main.deb0bdd4.css.map",
+    "main.3deb0507.js.map": "/crop-app/static/js/main.3deb0507.js.map"
   },
   "entrypoints": [
-    "static/css/main.9d4a1b43.css",
-    "static/js/main.cd58166d.js"
+    "static/css/main.deb0bdd4.css",
+    "static/js/main.3deb0507.js"
   ]
 }
