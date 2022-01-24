@@ -4,6 +4,7 @@
   "homepage": "https://flygomel.github.com/crop-app",
   "private": true,
   "dependencies": {
+    "downloadjs": "^1.4.7",
     "fabric": "^4.6.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",

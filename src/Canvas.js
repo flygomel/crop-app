@@ -16,6 +16,13 @@ function App({ onReady }) {
     const setCurrentDimensions = () => {
       canvas.setWidth(parentEl.clientWidth);
       canvas.setHeight(parentEl.clientHeight);
+      canvas.diameter =
+        (canvas.height > canvas.width ? canvas.width : canvas.height) / 2;
+      canvas.radius = canvas.diameter / 2;
+      canvas.center = {
+        left: canvas.width / 2,
+        top: canvas.height / 2,
+      };
       canvas.renderAll();
     };
 
