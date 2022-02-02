@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { fabric } from "fabric";
 
+// Initialize canvas and handle window resize
+
 function App({ onReady }) {
   const parentRef = useRef();
   const canvasRef = useRef();
@@ -16,8 +18,9 @@ function App({ onReady }) {
     const setCurrentDimensions = () => {
       canvas.setWidth(parentEl.clientWidth);
       canvas.setHeight(parentEl.clientHeight);
-      canvas.diameter =
+      canvas.maxSize =
         (canvas.height > canvas.width ? canvas.width : canvas.height) / 2;
+      canvas.diameter = canvas.maxSize;
       canvas.radius = canvas.diameter / 2;
       canvas.center = {
         left: canvas.width / 2,

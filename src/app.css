@@ -2,6 +2,24 @@
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.no-image-container {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.no-image {
+	color: white;
+	font-size: 17px;
 }
 
 .buttons {

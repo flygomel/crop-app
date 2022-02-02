@@ -1,43 +1,107 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
 import download from "downloadjs";
 
 import "./app.css";
 import Canvas from "./Canvas";
 
-const isTouchDevice =
-  "ontouchstart" in window ||
-  navigator.maxTouchPoints > 0 ||
-  navigator.msMaxTouchPoints > 0;
-
 function App() {
+  const [editEnabled, setEditEnabled] = useState(false);
   const [canvas, setCanvas] = useState();
   const [image, setImage] = useState();
-  const onReady = useCallback((canvas) => {
-    setCanvas(canvas);
 
-    const circle = new fabric.Circle({
-      fill: "#31343a",
+  // refs for canvas objects
+  const refs = useRef({
+    cropGroup: null,
+    crop: null,
+    image: null,
+    croppedImage: null,
+  }).current;
+
+  // check and fix crop area inside image
+  const updateCropLimits = useCallback(() => {
+    // check crop scale
+    if (refs.cropGroup.scaleX > 1) refs.cropGroup.set({ scaleX: 1 });
+    if (refs.cropGroup.scaleY > 1) refs.cropGroup.set({ scaleY: 1 });
+
+    const { top, left, width, height, set, scaleX, scaleY } = refs.cropGroup;
+
+    const w = refs.image.scaleX * refs.image.width;
+    const h = refs.image.scaleY * refs.image.height;
+
+    const minTop = refs.image.top + (height * scaleY - h) / 2;
+    const maxTop = refs.image.top + (h - height * scaleY) / 2;
+    const minLeft = refs.image.left + (width * scaleX - w) / 2;
+    const maxLeft = refs.image.left + (w - width * scaleX) / 2;
+
+    // check crop position
+    if (top < minTop) refs.cropGroup.set({ top: minTop });
+    if (top > maxTop) refs.cropGroup.set({ top: maxTop });
+    if (left < minLeft) refs.cropGroup.set({ left: minLeft });
+    if (left > maxLeft) refs.cropGroup.set({ left: maxLeft });
+  }, []);
+
+  // initialize objects on canvas ready
+  const onReady = useCallback((canvas) => {
+    // initialize crop group
+    refs.cropGroup = new fabric.Group();
+    refs.cropGroup
+      .setControlsVisibility({
+        mtr: false,
+      })
+      .set({
+        selectable: false,
+        originX: "center",
+        originY: "center",
+        lockScalingFlip: true,
+      });
+    refs.cropGroup.on("selected", () => setEditEnabled(true));
+    refs.cropGroup.on("deselected", () => setEditEnabled(false));
+    refs.cropGroup.on("moving", updateCropLimits);
+    refs.cropGroup.on("scaling", updateCropLimits);
+
+    // initialize crop
+    refs.crop = new fabric.Rect({
+      fill: "transparent",
       selectable: false,
       originX: "center",
       originY: "center",
       left: canvas.center.left,
       top: canvas.center.top,
-      radius: canvas.radius,
+      absolutePositioned: true,
     });
+    // select crop area on double mouse click
+    refs.crop.on("mousedblclick", (e) =>
+      canvas.setActiveObject(refs.cropGroup)
+    );
+    refs.cropGroup.addWithUpdate(refs.crop);
+    canvas.add(refs.cropGroup);
 
     canvas.hoverCursor = "default";
     canvas.selection = false;
-    canvas.clipPath = circle;
-    canvas.add(circle);
+
+    setCanvas(canvas);
   }, []);
+
+  // crop mode switch
+  useEffect(() => {
+    if (!canvas) return;
+
+    if (editEnabled) image.set({ opacity: 0.5 });
+    else image.set({ opacity: 0 });
+
+    canvas.renderAll();
+  }, [editEnabled]);
 
   const fileRef = useRef();
   const openImageSelect = useCallback(() => fileRef.current.click(), []);
+
+  // image select handler
   const handleImageSelect = useCallback(
     (e) => {
       const reader = new FileReader();
       reader.onload = function (e) {
+        // destroy previous image
         image?.dispose();
 
         var img = new Image();
@@ -45,12 +109,18 @@ function App() {
         img.onload = function () {
           const image = new fabric.Image(img);
           const scale =
-            canvas.diameter / (img.height < img.width ? img.height : img.width);
+            canvas.maxSize / (img.height < img.width ? img.height : img.width);
 
-          !isTouchDevice &&
-            image.on("mousedblclick", (e) =>
-              canvas.setActiveObject(image).renderAll()
-            );
+          // fit crop area with image sizes
+          refs.crop.set({
+            width: img.width * scale,
+            height: img.height * scale,
+          });
+          refs.cropGroup.set({
+            width: img.width * scale,
+            height: img.height * scale,
+          });
+
           image
             .scale(scale)
             .setControlsVisibility({
@@ -61,14 +131,25 @@ function App() {
               mtr: false,
             })
             .set({
-              selectable: isTouchDevice,
+              selectable: false,
               originX: "center",
               originY: "center",
               left: canvas.center.left,
               top: canvas.center.top,
+              opacity: 0,
             });
 
-          canvas.add(image).setActiveObject(image);
+          // clone original image for crop area
+          const croppedImage = fabric.util.object.clone(image);
+          croppedImage.clipPath = refs.crop;
+          croppedImage.set({ opacity: 1 });
+
+          refs.image = image;
+          refs.croppedImage = croppedImage;
+
+          canvas.add(image);
+          canvas.add(croppedImage);
+          canvas.add(refs.crop);
           setImage(image);
         };
       };
@@ -77,25 +158,29 @@ function App() {
     [canvas, image]
   );
 
+  // export cropped image
   const exportImage = useCallback(() => {
-    canvas.item(0).set({ visible: false });
-    canvas.renderAll();
+    const width = refs.cropGroup.width * refs.cropGroup.scaleX;
+    const height = refs.cropGroup.height * refs.cropGroup.scaleY;
     const base64 = canvas.toDataURL({
       format: "png",
       multiplier: window.devicePixelRatio,
-      left: canvas.center.left - canvas.radius,
-      top: canvas.center.top - canvas.radius,
-      width: canvas.radius * 2,
-      height: canvas.radius * 2,
+      left: refs.cropGroup.left - width / 2,
+      top: refs.cropGroup.top - height / 2,
+      width,
+      height,
     });
-    canvas.item(0).set({ visible: true });
-    canvas.renderAll();
     download(base64, "cropped-image.png");
   }, [canvas]);
 
   return (
     <div className="container">
       <Canvas onReady={onReady} />
+      {!image && (
+        <div className="no-image-container">
+          <div className="no-image">Please select image</div>
+        </div>
+      )}
       <div className="buttons">
         <input
           ref={fileRef}
